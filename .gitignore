@@ -2,6 +2,9 @@
 *.env
 .env*
 
+# Scripts locais com credenciais (NÃO COMMITAR!)
+scripts_local/
+
 # Cache Python
 __pycache__/
 *.pyc
