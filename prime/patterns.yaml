@@ -1,0 +1,424 @@
+# Prime - Padrões de Detecção de Segurança
+# Sistema de Segurança Inteligente | OmniForge
+
+patterns:
+  # ══════════════════════════════════════════════════
+  # CREDENCIAIS E SECRETS
+  # ══════════════════════════════════════════════════
+  
+  credentials:
+    openai:
+      pattern: 'sk-[a-zA-Z0-9]{32,}'
+      severity: CRITICAL
+      message: "API key OpenAI detectada"
+      action: "Revogue em platform.openai.com/api-keys"
+    
+    openai_project:
+      pattern: 'sk-proj-[a-zA-Z0-9]{32,}'
+      severity: CRITICAL
+      message: "API key OpenAI (project) detectada"
+      action: "Revogue em platform.openai.com/api-keys"
+    
+    openrouter:
+      pattern: 'sk-or-v1-[a-zA-Z0-9]{64}'
+      severity: CRITICAL
+      message: "API key OpenRouter detectada"
+      action: "Revogue em openrouter.ai/keys"
+    
+    github_pat:
+      pattern: 'ghp_[a-zA-Z0-9]{36}'
+      severity: CRITICAL
+      message: "GitHub Personal Access Token detectado"
+      action: "Revogue em github.com/settings/tokens"
+    
+    github_oauth:
+      pattern: 'gho_[a-zA-Z0-9]{36}'
+      severity: CRITICAL
+      message: "GitHub OAuth Token detectado"
+      action: "Revogue nas configurações do OAuth App"
+    
+    aws_access_key:
+      pattern: 'AKIA[0-9A-Z]{16}'
+      severity: CRITICAL
+      message: "AWS Access Key detectada"
+      action: "Desative em AWS IAM Console"
+    
+    aws_secret_key:
+      pattern: '[a-zA-Z0-9/+=]{40}'
+      context_required: true
+      severity: CRITICAL
+      message: "Possível AWS Secret Key detectada"
+      action: "Rotacione as credenciais AWS"
+    
+    stripe_live:
+      pattern: 'sk_live_[a-zA-Z0-9]{24,}'
+      severity: CRITICAL
+      message: "Stripe Live Key detectada - PRODUÇÃO!"
+      action: "Rotacione em dashboard.stripe.com/apikeys"
+    
+    stripe_test:
+      pattern: 'sk_test_[a-zA-Z0-9]{24,}'
+      severity: HIGH
+      message: "Stripe Test Key detectada"
+      action: "Mova para variável de ambiente"
+    
+    sendgrid:
+      pattern: 'SG\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{43}'
+      severity: CRITICAL
+      message: "SendGrid API Key detectada"
+      action: "Revogue em app.sendgrid.com/settings/api_keys"
+    
+    supabase_service:
+      pattern: 'sbp_[a-zA-Z0-9]{40}'
+      severity: CRITICAL
+      message: "Supabase Service Role Key detectada"
+      action: "Rotacione em Supabase Dashboard > Settings > API"
+    
+    supabase_jwt:
+      pattern: 'eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*'
+      context_required: true
+      severity: HIGH
+      message: "JWT Token detectado (possível Supabase)"
+      action: "Verifique se é service role ou anon key"
+    
+    slack_bot:
+      pattern: 'xoxb-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}'
+      severity: CRITICAL
+      message: "Slack Bot Token detectado"
+      action: "Regenere em api.slack.com/apps"
+    
+    slack_user:
+      pattern: 'xoxp-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}'
+      severity: CRITICAL
+      message: "Slack User Token detectado"
+      action: "Regenere nas configurações do workspace"
+    
+    twilio:
+      pattern: 'SK[a-f0-9]{32}'
+      severity: CRITICAL
+      message: "Twilio API Key detectada"
+      action: "Rotacione em console.twilio.com"
+    
+    telegram_bot:
+      pattern: '[0-9]{8,10}:[a-zA-Z0-9_-]{35}'
+      severity: CRITICAL
+      message: "Telegram Bot Token detectado"
+      action: "Revogue com @BotFather"
+    
+    discord_bot:
+      pattern: '[MN][a-zA-Z0-9]{23,}\.[a-zA-Z0-9-_]{6}\.[a-zA-Z0-9-_]{27}'
+      severity: CRITICAL
+      message: "Discord Bot Token detectado"
+      action: "Regenere em discord.com/developers"
+    
+    elevenlabs:
+      pattern: 'sk_[a-f0-9]{32,48}'
+      severity: CRITICAL
+      message: "ElevenLabs API Key detectada"
+      action: "Rotacione em elevenlabs.io/settings"
+
+  # ══════════════════════════════════════════════════
+  # CONEXÕES DE BANCO DE DADOS
+  # ══════════════════════════════════════════════════
+  
+  database_connections:
+    postgresql:
+      pattern: 'postgres(ql)?://[^:]+:[^@]+@[^/]+/\w+'
+      severity: CRITICAL
+      message: "Connection string PostgreSQL com credenciais"
+      action: "Use variável de ambiente DATABASE_URL"
+    
+    mysql:
+      pattern: 'mysql://[^:]+:[^@]+@[^/]+/\w+'
+      severity: CRITICAL
+      message: "Connection string MySQL com credenciais"
+      action: "Use variável de ambiente DATABASE_URL"
+    
+    mongodb:
+      pattern: 'mongodb(\+srv)?://[^:]+:[^@]+@'
+      severity: CRITICAL
+      message: "Connection string MongoDB com credenciais"
+      action: "Use variável de ambiente MONGODB_URI"
+    
+    redis:
+      pattern: 'redis://[^:]*:[^@]+@'
+      severity: CRITICAL
+      message: "Connection string Redis com credenciais"
+      action: "Use variável de ambiente REDIS_URL"
+
+  # ══════════════════════════════════════════════════
+  # CERTIFICADOS E CHAVES PRIVADAS
+  # ══════════════════════════════════════════════════
+  
+  certificates:
+    rsa_private:
+      pattern: '-----BEGIN RSA PRIVATE KEY-----'
+      severity: CRITICAL
+      message: "Chave privada RSA detectada"
+      action: "NUNCA compartilhe chaves privadas. Armazene em Vault."
+    
+    openssh_private:
+      pattern: '-----BEGIN OPENSSH PRIVATE KEY-----'
+      severity: CRITICAL
+      message: "Chave privada SSH detectada"
+      action: "Gere nova chave SSH. Nunca compartilhe chaves privadas."
+    
+    pgp_private:
+      pattern: '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+      severity: CRITICAL
+      message: "Chave privada PGP detectada"
+      action: "Revogue e gere nova chave PGP."
+    
+    ec_private:
+      pattern: '-----BEGIN EC PRIVATE KEY-----'
+      severity: CRITICAL
+      message: "Chave privada EC detectada"
+      action: "Nunca compartilhe chaves privadas."
+    
+    generic_private:
+      pattern: '-----BEGIN PRIVATE KEY-----'
+      severity: CRITICAL
+      message: "Chave privada detectada"
+      action: "Armazene em serviço de secrets seguro."
+
+  # ══════════════════════════════════════════════════
+  # PADRÕES GENÉRICOS
+  # ══════════════════════════════════════════════════
+  
+  generic:
+    password_assignment:
+      pattern: '(password|senha|pwd)\s*[=:]\s*["\'][^"\']{4,}["\']'
+      case_insensitive: true
+      severity: HIGH
+      message: "Senha hardcoded detectada"
+      action: "Use variável de ambiente"
+    
+    api_key_assignment:
+      pattern: '(api_?key|apikey)\s*[=:]\s*["\'][^"\']{8,}["\']'
+      case_insensitive: true
+      severity: HIGH
+      message: "API key hardcoded detectada"
+      action: "Use variável de ambiente"
+    
+    secret_assignment:
+      pattern: '(secret|segredo)\s*[=:]\s*["\'][^"\']{8,}["\']'
+      case_insensitive: true
+      severity: HIGH
+      message: "Secret hardcoded detectado"
+      action: "Use variável de ambiente ou Vault"
+    
+    token_assignment:
+      pattern: '(token|bearer)\s*[=:]\s*["\'][^"\']{16,}["\']'
+      case_insensitive: true
+      severity: HIGH
+      message: "Token hardcoded detectado"
+      action: "Use variável de ambiente"
+
+# ══════════════════════════════════════════════════
+# VULNERABILIDADES DE CÓDIGO
+# ══════════════════════════════════════════════════
+
+code_vulnerabilities:
+  sql_injection:
+    patterns:
+      - 'query\s*\(\s*[`"''].*\$\{.*\}.*[`"'']\s*\)'
+      - 'query\s*\(\s*[`"''].*\+.*[`"'']\s*\)'
+      - 'execute\s*\(\s*f["\'].*\{.*\}.*["\']\s*\)'
+      - 'cursor\.execute\s*\(\s*["\'].*%.*["\']\s*%'
+    severity: HIGH
+    message: "Possível SQL Injection - concatenação em query"
+    fix: "Use prepared statements ou query builder"
+    reference: "OWASP A03:2021 | CWE-89"
+  
+  xss:
+    patterns:
+      - 'innerHTML\s*=\s*[^"'']'
+      - 'document\.write\s*\('
+      - 'dangerouslySetInnerHTML\s*=\s*\{\s*\{\s*__html'
+      - 'v-html\s*='
+      - '\[innerHTML\]\s*='
+    severity: HIGH
+    message: "Possível XSS - HTML não sanitizado"
+    fix: "Use textContent ou sanitize com DOMPurify"
+    reference: "OWASP A03:2021 | CWE-79"
+  
+  command_injection:
+    patterns:
+      - 'exec\s*\(\s*[`"''].*\$\{.*\}'
+      - 'spawn\s*\(\s*["\']sh["\']\s*,\s*\[\s*["\']-c'
+      - 'system\s*\(\s*\$'
+      - 'child_process.*exec.*\$'
+      - 'subprocess\..*shell\s*=\s*True'
+    severity: CRITICAL
+    message: "Possível Command Injection"
+    fix: "Use APIs específicas, não shell commands"
+    reference: "OWASP A03:2021 | CWE-78"
+  
+  eval_usage:
+    patterns:
+      - 'eval\s*\('
+      - 'new\s+Function\s*\('
+      - 'setTimeout\s*\(\s*[^,]+,'
+      - 'setInterval\s*\(\s*[^,]+,'
+    severity: HIGH
+    message: "Uso de eval() ou construção dinâmica de código"
+    fix: "Evite eval(). Use alternativas seguras."
+    reference: "CWE-94 | CWE-95"
+
+# ══════════════════════════════════════════════════
+# CONFIGURAÇÕES INSEGURAS
+# ══════════════════════════════════════════════════
+
+insecure_configs:
+  cors_wildcard:
+    patterns:
+      - "Access-Control-Allow-Origin.*['\"]\\*['\"]"
+      - "cors\\s*\\(\\s*\\{\\s*origin\\s*:\\s*['\"]\\*['\"]"
+      - "origin\\s*:\\s*true"
+    severity: HIGH
+    message: "CORS permissivo com wildcard"
+    fix: "Configure origins específicos"
+    reference: "OWASP | ISO 27001 A.8.26"
+  
+  debug_enabled:
+    patterns:
+      - 'DEBUG\s*=\s*["\']?[Tt]rue'
+      - 'NODE_ENV\s*=\s*["\']?development'
+      - 'FLASK_DEBUG\s*=\s*1'
+      - 'app\.debug\s*=\s*True'
+    context: production_check
+    severity: HIGH
+    message: "Debug habilitado (verificar se é produção)"
+    fix: "Desabilite debug em produção"
+    reference: "OWASP A05:2021"
+  
+  http_no_tls:
+    patterns:
+      - 'http://[^localhost][^127\.0\.0\.1]'
+    context: sensitive_data
+    severity: MEDIUM
+    message: "Requisição HTTP sem TLS"
+    fix: "Use HTTPS para dados sensíveis"
+    reference: "LGPD Art. 46 | ISO 27001 A.8.24"
+  
+  no_rls:
+    patterns:
+      - 'CREATE\s+TABLE.*(?!.*ENABLE\s+ROW\s+LEVEL\s+SECURITY)'
+    context: user_data_table
+    severity: HIGH
+    message: "Tabela criada sem RLS"
+    fix: "Adicione ENABLE ROW LEVEL SECURITY"
+    reference: "LGPD Art. 46 | OWASP A01:2021"
+
+# ══════════════════════════════════════════════════
+# DADOS PESSOAIS (LGPD)
+# ══════════════════════════════════════════════════
+
+lgpd_triggers:
+  personal_data_fields:
+    - cpf
+    - cnpj
+    - rg
+    - cnh
+    - nome_completo
+    - full_name
+    - email
+    - telefone
+    - phone
+    - celular
+    - mobile
+    - endereco
+    - address
+    - cep
+    - zip_code
+    - data_nascimento
+    - birth_date
+    - ip_address
+    - geolocation
+    - latitude
+    - longitude
+  
+  sensitive_data_fields:
+    - saude
+    - health
+    - doenca
+    - disease
+    - medicamento
+    - medication
+    - religiao
+    - religion
+    - etnia
+    - ethnicity
+    - raca
+    - race
+    - orientacao_sexual
+    - sexual_orientation
+    - opiniao_politica
+    - political_opinion
+    - filiacao_sindical
+    - union_membership
+    - biometria
+    - biometric
+    - genetica
+    - genetic
+    - facial_recognition
+    - fingerprint
+
+# ══════════════════════════════════════════════════
+# REFERÊNCIAS NORMATIVAS
+# ══════════════════════════════════════════════════
+
+references:
+  lgpd:
+    - article: "Art. 6"
+      topic: "Princípios do tratamento"
+      relevance: "Coleta mínima, finalidade, transparência"
+    
+    - article: "Art. 7"
+      topic: "Bases legais"
+      relevance: "Consentimento, contrato, legítimo interesse"
+    
+    - article: "Art. 11"
+      topic: "Dados sensíveis"
+      relevance: "Tratamento com consentimento específico"
+    
+    - article: "Art. 18"
+      topic: "Direitos do titular"
+      relevance: "Acesso, correção, exclusão, portabilidade"
+    
+    - article: "Art. 46"
+      topic: "Segurança"
+      relevance: "Medidas técnicas e administrativas"
+    
+    - article: "Art. 48"
+      topic: "Incidentes"
+      relevance: "Comunicação de vazamentos"
+  
+  iso27001:
+    - control: "A.5.15"
+      topic: "Controle de acesso"
+    
+    - control: "A.8.3"
+      topic: "Restrição de acesso à informação"
+    
+    - control: "A.8.24"
+      topic: "Uso de criptografia"
+    
+    - control: "A.8.28"
+      topic: "Codificação segura"
+  
+  owasp:
+    - id: "A01:2021"
+      name: "Broken Access Control"
+    
+    - id: "A02:2021"
+      name: "Cryptographic Failures"
+    
+    - id: "A03:2021"
+      name: "Injection"
+    
+    - id: "A05:2021"
+      name: "Security Misconfiguration"
+    
+    - id: "A07:2021"
+      name: "Identification and Authentication Failures"
